@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的星期天 · Chủ nhật của tôi</title>
+<style>
+:root{
+  --paper:#EEF3F1; --sheet:#FFFFFF; --ink:#1F2A33; --muted:#5F6E77;
+  --jade:#2E7D6B; --jade-soft:#D7EAE3; --seal:#B8322A; --seal-soft:#F6E1DE; --line:#D3DDD9;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#141B1E; --sheet:#1C2428; --ink:#E6EDEA; --muted:#97A6A0;
+    --jade:#6CC3AC; --jade-soft:#1F3A33; --seal:#E8695F; --seal-soft:#3A2220; --line:#2C373B;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;line-height:1.5}
+.zh{font-family:"Noto Serif SC","Songti SC","STSong","SimSun","Noto Serif CJK SC",serif}
+.wrap{max-width:860px;margin:0 auto;padding:28px 18px 140px}
+header h1{font-size:clamp(40px,8vw,64px);margin:0;font-weight:700;letter-spacing:.04em;color:var(--ink)}
+header .sub{color:var(--muted);margin:4px 0 0;font-size:17px}
+.hint{margin:18px 0 0;padding:12px 14px;border-left:4px solid var(--jade);background:var(--sheet);
+  color:var(--ink);font-size:14.5px;border-radius:0 8px 8px 0}
+.warn{display:none;margin-top:12px;padding:12px 14px;background:var(--seal-soft);color:var(--seal);border-radius:8px;font-size:14.5px}
+
+/* control bar */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--sheet);border-top:1px solid var(--line);z-index:5}
+.bar-in{max-width:860px;margin:0 auto;padding:10px 18px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+button,select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--line);
+  border-radius:8px;padding:7px 12px;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,.line:focus-visible{outline:3px solid var(--jade);outline-offset:2px}
+button.primary{background:var(--jade);border-color:var(--jade);color:var(--sheet);font-weight:600}
+button.stop{color:var(--seal);border-color:var(--seal)}
+.ctl{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.ctl input[type=range]{width:100px;accent-color:var(--jade)}
+.toggles{display:flex;gap:12px;font-size:14px;color:var(--muted)}
+.toggles label{display:flex;gap:4px;align-items:center;cursor:pointer}
+.toggles input{accent-color:var(--jade)}
+
+/* timeline sections */
+section{margin-top:36px}
+.sec-head{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.sec-head .time{font-variant-numeric:tabular-nums;font-weight:700;color:var(--jade);min-width:64px}
+.sec-head h2{margin:0;font-size:20px;font-weight:600}
+.sec-head .play-sec{margin-left:auto;font-size:13px;padding:4px 10px}
+
+.line{position:relative;display:grid;grid-template-columns:34px 1fr auto;gap:2px 12px;align-items:start;
+  padding:12px 10px 12px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px}
+.line:hover{background:var(--jade-soft)}
+.line .n{color:var(--muted);font-size:13px;padding-top:9px;font-variant-numeric:tabular-nums}
+.line .zh{font-size:clamp(22px,4.4vw,28px);line-height:1.35;grid-column:2}
+.line .py{grid-column:2;color:var(--jade);font-size:15.5px}
+.line .vi{grid-column:2;color:var(--muted);font-size:15px}
+.line .src{grid-column:2;font-size:12px;color:var(--muted);opacity:.8}
+.line .btn{grid-column:3;grid-row:1/span 4;align-self:center;border-radius:50%;width:40px;height:40px;padding:0;
+  display:grid;place-items:center;font-size:15px}
+.line.active{background:var(--seal-soft)}
+.line.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:4px;background:var(--seal);border-radius:2px}
+.line.active .zh{color:var(--seal)}
+.gap{grid-column:2;height:4px;background:var(--line);border-radius:2px;overflow:hidden;display:none}
+.gap i{display:block;height:100%;width:0;background:var(--seal)}
+.line.waiting .gap{display:block}
+.gap-label{grid-column:2;font-size:12.5px;color:var(--seal);display:none}
+.line.waiting .gap-label{display:block}
+
+body.hide-py .py, body.hide-vi .vi, body.hide-src .src{display:none}
+body.hide-zh .line .zh{filter:blur(7px)}
+body.hide-zh .line.active .zh{filter:none}
+
+.short{background:var(--sheet);border-radius:10px;padding:16px 18px;margin-top:12px;font-size:22px;line-height:1.8}
+table{width:100%;border-collapse:collapse;margin-top:10px;background:var(--sheet);border-radius:8px;overflow:hidden}
+td,th{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:15px}
+th{color:var(--muted);font-weight:600;font-size:13px}
+td.zh{font-size:20px}
+td .say{padding:3px 8px;font-size:12px}
+footer{margin-top:30px;color:var(--muted);font-size:13px}
+@media (max-width:560px){ .ctl input[type=range]{width:80px} .toggles{flex-wrap:wrap} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="zh">我的星期天</h1>
+    <p class="sub">Chủ nhật của tôi · bài kể luyện nghe – nhại – nói</p>
+    <div class="hint">Bấm vào một câu để nghe. Chế độ <b>Nhại theo</b> sẽ đọc câu, rồi dừng một khoảng trống (thanh màu đỏ) để bạn nói lại trước khi sang câu tiếp. Bật <b>Che chữ Hán</b> để tự kiểm tra trí nhớ.</div>
+    <div class="warn" id="warn">Trình duyệt này chưa có giọng đọc tiếng Trung. Hãy mở bằng Chrome hoặc Edge, hoặc cài gói giọng nói Chinese (Simplified) trong cài đặt hệ điều hành/điện thoại.</div>
+  </header>
+  <main id="story"></main>
+
+  <section>
+    <div class="sec-head"><span class="time">30s</span><h2>Bản rút gọn để học trước</h2>
+      <button class="play-sec" id="playShort">▶ Nghe cả đoạn</button></div>
+    <div class="short zh" id="shortText"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="time">词</span><h2>Từ mới ngoài giáo trình</h2></div>
+    <table id="vocab"><thead><tr><th>中文</th><th>Pinyin</th><th>Nghĩa</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <footer>Mẫu câu dựa trên giáo trình KAIKOU · Chinese Thực Chiến U30+ (Day 04–17, buổi AM Day 8/14/15, PM Day 13/14). Giọng đọc dùng Web Speech API có sẵn trong trình duyệt.</footer>
+</div>
+
+<div class="bar"><div class="bar-in">
+  <button class="primary" id="playAll">▶ Đọc cả bài</button>
+  <button id="shadow">🎙 Nhại theo</button>
+  <button class="stop" id="stop">■ Dừng</button>
+  <span class="ctl">Tốc độ <input type="range" id="rate" min="0.5" max="1.2" step="0.1" value="0.8"><b id="rateVal">0.8×</b></span>
+  <span class="ctl">Lặp <select id="rep"><option>1</option><option selected>2</option><option>3</option></select></span>
+  <span class="ctl">Giọng <select id="voice"></select></span>
+  <span class="toggles">
+    <label><input type="checkbox" id="tPy" checked> Pinyin</label>
+    <label><input type="checkbox" id="tVi" checked> Tiếng Việt</label>
+    <label><input type="checkbox" id="tSrc"> Nguồn</label>
+    <label><input type="checkbox" id="tZh"> Che chữ Hán</label>
+  </span>
+</div></div>
+
+<script>
+const DATA = [
+ {time:"06:00", title:"Buổi sáng: dậy sớm, đi ăn phở", lines:[
+  ["昨天是星期天。","Zuótiān shì xīngqītiān.","Hôm qua là chủ nhật.","AM D15"],
+  ["我早上六点起床。","Wǒ zǎoshang liù diǎn qǐchuáng.","Tôi dậy lúc 6h sáng.","GT D07"],
+  ["我习惯六点跟达老师学中文。","Wǒ xíguàn liù diǎn gēn Dá lǎoshī xué Zhōngwén.","Tôi quen 6h học tiếng Trung với thầy Đạt.","GT D09"],
+  ["我先刷牙、洗脸。","Wǒ xiān shuā yá, xǐ liǎn.","Tôi đánh răng, rửa mặt trước.","GT D05, D10"],
+  ["然后跟老婆一起去吃河粉。","Ránhòu gēn lǎopó yìqǐ qù chī héfěn.","Sau đó cùng vợ đi ăn phở.","GT D10 · AM D14"],
+  ["河粉店离我家不远。","Héfěn diàn lí wǒ jiā bù yuǎn.","Quán phở cách nhà tôi không xa.","PM D14"],
+  ["骑摩托车大概十分钟。","Qí mótuōchē dàgài shí fēnzhōng.","Đi xe máy khoảng 10 phút.","PM D14 · GT D27"],
+  ["那家店人很多。","Nà jiā diàn rén hěn duō.","Quán đó rất đông.","AM D8"],
+  ["这是我们第一次去。","Zhè shì wǒmen dì yī cì qù.","Đây là lần đầu chúng tôi đi.","AM D14"],
+  ["真的很好吃！","Zhēn de hěn hǎochī!","Ngon thật sự!","GT D11, D21"]
+ ]},
+ {time:"Sáng", title:"Sửa nhà mới", lines:[
+  ["吃完早饭以后，我们去新房子。","Chī wán zǎofàn yǐhòu, wǒmen qù xīn fángzi.","Ăn sáng xong, chúng tôi qua nhà mới.","PM D13"],
+  ["房子正在装修。","Fángzi zhèngzài zhuāngxiū.","Nhà đang sửa.","GT D08"],
+  ["我和老婆打算搬出去住。","Wǒ hé lǎopó dǎsuàn bān chūqù zhù.","Tôi và vợ dự định ra ở riêng.","GT D09, D17"],
+  ["我把卫生间打扫干净了。","Wǒ bǎ wèishēngjiān dǎsǎo gānjìng le.","Tôi dọn sạch phòng tắm.","AM D15"],
+  ["还把马桶修好了。","Hái bǎ mǎtǒng xiū hǎo le.","Còn sửa xong bồn cầu.","AM D15 · PM D14"],
+  ["我比较喜欢自己动手修房子。","Wǒ bǐjiào xǐhuan zìjǐ dòngshǒu xiū fángzi.","Tôi khá thích tự tay sửa nhà.","PM D14"]
+ ]},
+ {time:"13:00", title:"Buổi trưa", lines:[
+  ["中午一点左右，我们去吃甜品和小吃。","Zhōngwǔ yī diǎn zuǒyòu, wǒmen qù chī tiánpǐn hé xiǎochī.","Khoảng 1h trưa, chúng tôi đi ăn chè và ăn nhẹ.","GT D07"]
+ ]},
+ {time:"Chiều", title:"Đi xem moto phân khối lớn", lines:[
+  ["然后我们去看大摩托。","Ránhòu wǒmen qù kàn dà mótuō.","Sau đó chúng tôi đi xem moto PKL.","GT D10"],
+  ["我差不多两年没骑大摩托了。","Wǒ chàbuduō liǎng nián méi qí dà mótuō le.","Gần 2 năm rồi tôi không đi PKL.","AM D8"],
+  ["所以熄火了几次。","Suǒyǐ xīhuǒ le jǐ cì.","Nên chết máy vài lần.","GT D06"],
+  ["后来骑得很顺。","Hòulái qí de hěn shùn.","Sau đó đi trơn tru.","PM D13"],
+  ["我挺喜欢这辆车的。","Wǒ tǐng xǐhuan zhè liàng chē de.","Tôi khá thích chiếc xe này.","AM D8"],
+  ["但是有点贵，所以我还没买。","Dànshì yǒudiǎn guì, suǒyǐ wǒ hái méi mǎi.","Nhưng hơi đắt nên tôi chưa mua.","GT D06 · AM D14"]
+ ]},
+ {time:"爱好", title:"Sở thích và cảm xúc", lines:[
+  ["我发现我的爱好是大摩托。","Wǒ fāxiàn wǒ de àihào shì dà mótuō.","Tôi nhận ra sở thích của mình là PKL.","GT D04"],
+  ["骑车的时候，我觉得很放松。","Qí chē de shíhou, wǒ juéde hěn fàngsōng.","Khi đi xe, tôi thấy rất thư giãn.","GT D12, D16"],
+  ["我喜欢大摩托，因为动力很强。","Wǒ xǐhuan dà mótuō, yīnwèi dònglì hěn qiáng.","Tôi thích PKL vì xe rất mạnh.","GT D16 · AM D15"],
+  ["在路上也很灵活。","Zài lùshang yě hěn línghuó.","Trên đường cũng rất linh hoạt.","GT D14"],
+  ["我有时候不太专心。","Wǒ yǒu shíhou bú tài zhuānxīn.","Thỉnh thoảng tôi hơi lơ đãng.","GT D08"],
+  ["但是刹车很好，所以我不怕摔。","Dànshì shāchē hěn hǎo, suǒyǐ wǒ bú pà shuāi.","Nhưng phanh rất tốt nên tôi không sợ ngã.","AM D15"],
+  ["卖了旧车以后，我很想它。","Mài le jiù chē yǐhòu, wǒ hěn xiǎng tā.","Sau khi bán xe cũ, tôi rất nhớ nó.","PM D13"],
+  ["现在我还很后悔卖了那辆川崎Z300。","Xiànzài wǒ hái hěn hòuhuǐ mài le nà liàng Chuānqí Z300.","Giờ vẫn tiếc vì bán chiếc Kawasaki Z300 đó.","GT D09"]
+ ]},
+ {time:"你呢", title:"Hỏi lại người nghe", lines:[
+  ["你呢？你喜欢什么？","Nǐ ne? Nǐ xǐhuan shénme?","Còn bạn? Bạn thích gì?","GT D04"],
+  ["你周末一般做什么？","Nǐ zhōumò yìbān zuò shénme?","Cuối tuần bạn thường làm gì?","GT D17"]
+ ]}
+];
+const SHORT = "昨天是星期天。我六点起床，先刷牙洗脸，然后跟老婆去吃河粉。河粉店离我家不远，骑摩托车十分钟。然后我去新房子，把卫生间打扫干净了。下午我们去看大摩托。我挺喜欢的，但是有点贵，所以还没买。你呢？你周末一般做什么？";
+const VOCAB = [["河粉","héfěn","phở"],["装修","zhuāngxiū","sửa sang nhà"],["马桶","mǎtǒng","bồn cầu"],
+ ["自己动手","zìjǐ dòngshǒu","tự tay làm (DIY)"],["大摩托","dà mótuō","moto phân khối lớn"],["熄火","xīhuǒ","chết máy"],
+ ["刹车","shāchē","phanh"],["后悔","hòuhuǐ","hối tiếc"],["川崎","Chuānqí","Kawasaki"]];
+
+/* render */
+const story = document.getElementById('story'); const allLines = []; let n = 0;
+DATA.forEach((sec, si) => {
+  const s = document.createElement('section');
+  s.innerHTML = `<div class="sec-head"><span class="time">${sec.time}</span><h2>${sec.title}</h2>
+    <button class="play-sec" data-sec="${si}">▶ Nghe phần này</button></div>`;
+  sec.lines.forEach(l => {
+    n++;
+    const d = document.createElement('div');
+    d.className = 'line'; d.tabIndex = 0;
+    d.innerHTML = `<span class="n">${n}</span><div class="zh">${l[0]}</div><div class="py">${l[1]}</div>
+      <div class="vi">${l[2]}</div><div class="src">Nguồn: ${l[3]}</div>
+      <div class="gap"><i></i></div><div class="gap-label">Đến lượt bạn nói…</div>
+      <button class="btn" aria-label="Nghe câu ${n}">▶</button>`;
+    d.dataset.idx = allLines.length; d.dataset.sec = si;
+    allLines.push({el:d, zh:l[0]});
+    s.appendChild(d);
+  });
+  story.appendChild(s);
+});
+document.getElementById('shortText').textContent = SHORT;
+const tb = document.querySelector('#vocab tbody');
+VOCAB.forEach(v => { const tr = document.createElement('tr');
+  tr.innerHTML = `<td class="zh">${v[0]}</td><td>${v[1]}</td><td>${v[2]}</td><td><button class="say">▶</button></td>`;
+  tr.querySelector('.say').onclick = () => runList([{zh:v[0]}], {rep:1, gap:false});
+  tb.appendChild(tr); });
+
+/* speech */
+const synth = window.speechSynthesis; let voices = []; let token = 0;
+const voiceSel = document.getElementById('voice');
+function loadVoices(){
+  if(!synth){ document.getElementById('warn').style.display='block'; return; }
+  voices = synth.getVoices().filter(v => /^zh|cmn/i.test(v.lang));
+  voices.sort((a,b) => (b.lang==='zh-CN') - (a.lang==='zh-CN'));
+  voiceSel.innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name.replace(/Microsoft |Google /,'')} (${v.lang})</option>`).join('');
+  document.getElementById('warn').style.display = voices.length ? 'none' : 'block';
+}
+if(synth){ loadVoices(); synth.onvoiceschanged = loadVoices; setTimeout(loadVoices, 600); }
+
+const rateEl = document.getElementById('rate');
+rateEl.oninput = () => document.getElementById('rateVal').textContent = rateEl.value + '×';
+
+function speak(text, t){
+  return new Promise(res => {
+    if(!synth || t !== token) return res();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = parseFloat(rateEl.value);
+    const v = voices[voiceSel.value]; if(v) u.voice = v;
+    u.onend = u.onerror = () => res();
+    synth.speak(u);
+  });
+}
+function wait(ms, el, t){
+  return new Promise(res => {
+    if(t !== token) return res();
+    const bar = el ? el.querySelector('.gap i') : null; const start = performance.now();
+    if(el) el.classList.add('waiting');
+    (function tick(now){
+      if(t !== token){ if(el) el.classList.remove('waiting'); return res(); }
+      const p = Math.min(1, (now - start)/ms); if(bar) bar.style.width = (p*100)+'%';
+      if(p < 1) requestAnimationFrame(tick); else { if(el) el.classList.remove('waiting'); res(); }
+    })(start);
+  });
+}
+function clearActive(){ document.querySelectorAll('.line.active,.line.waiting').forEach(e=>e.classList.remove('active','waiting')); }
+function stopAll(){ token++; if(synth) synth.cancel(); clearActive(); }
+
+async function runList(list, opt){
+  stopAll(); const t = token;
+  const rep = opt.rep ?? parseInt(document.getElementById('rep').value);
+  for(const item of list){
+    if(t !== token) return;
+    clearActive();
+    if(item.el){ item.el.classList.add('active'); item.el.scrollIntoView({block:'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto':'smooth'}); }
+    for(let r=0; r<rep; r++){
+      await speak(item.zh, t); if(t !== token) return;
+      if(opt.gap){
+        const ms = Math.max(1800, item.zh.length * 420 / parseFloat(rateEl.value));
+        await wait(ms, item.el, t);
+      } else if(r < rep-1) await wait(400, null, t);
+    }
+    if(!opt.gap) await wait(500, null, t);
+  }
+  if(t === token) clearActive();
+}
+
+/* events */
+allLines.forEach(it => {
+  const go = () => runList([it], {gap:false});
+  it.el.addEventListener('click', go);
+  it.el.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+});
+document.querySelectorAll('.play-sec[data-sec]').forEach(b => b.onclick = e => {
+  e.stopPropagation(); const s = b.dataset.sec;
+  runList(allLines.filter(l => l.el.dataset.sec === s), {gap:false, rep:1});
+});
+document.getElementById('playAll').onclick = () => runList(allLines, {gap:false, rep:1});
+document.getElementById('shadow').onclick = () => runList(allLines, {gap:true});
+document.getElementById('stop').onclick = stopAll;
+document.getElementById('playShort').onclick = () =>
+  runList(SHORT.split(/(?<=[。？！])/).filter(Boolean).map(zh => ({zh})), {gap:false, rep:1});
+
+const tg = (id, cls, invert) => { const el = document.getElementById(id);
+  const f = () => document.body.classList.toggle(cls, invert ? !el.checked : el.checked); el.onchange = f; f(); };
+tg('tPy','hide-py',true); tg('tVi','hide-vi',true); tg('tSrc','hide-src',true); tg('tZh','hide-zh',false);
+</script>
+</body>
+</html>
